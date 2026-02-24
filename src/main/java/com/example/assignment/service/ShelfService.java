@@ -55,4 +55,17 @@ public class ShelfService {
             throw new RuntimeException(e);
         }
     }
+    public void deleteShelf(String id){
+        try{
+            getShelfById(id);
+            shelfRepository.deleteShelf(id);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void assignShelf(String shelfid, String shelfpositionid) {
+        getShelfById(shelfid);
+        shelfRepository.assignShelftoShelfPosition(shelfid,shelfpositionid);
+    }
 }

@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ShelfPosition {
-    String deviceId;
-
+    private String id;
+    private String deviceId;
+    private Integer positionNumber;
+    private boolean isDeleted=false;
 }

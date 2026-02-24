@@ -30,19 +30,33 @@ public class DeviceRepository {
                         partNumber:$partNumber,
                         buildingName:$buildingName,
                         deviceType:$deviceType,
-                        numberOfShelfPositions:$numberOfShelfPositions
+                        numberOfShelfPositions:$numberOfShelfPositions,
+                        isDeleted:false
                         })
+                        
+                        WITH d
+                        UNWIND range(1,$numberOfShelfPositions) as position
+                        
+                        CREATE (sp:ShelfPosition {
+                        id:randomUUID(),
+                        deviceId:$id,
+                        positionNumber:position,
+                        isDeleted:false
+                        })
+                        
+                        CREATE (d)-[:HAS]->(sp)
                     """, Map.of(
                         "id",device.getId(),
                         "deviceName",device.getDeviceName(),
                         "partNumber",device.getPartNumber(),
-                        "BuildingName",device.getBuildingName(),
+                        "buildingName",device.getBuildingName(),
                         "deviceType",device.getDeviceType(),
                         "numberOfShelfPositions",device.getNumberOfShelfPositions()
                 ));
                 return null;
             });
         }catch (Exception e){
+            e.printStackTrace();
             throw new RuntimeException("Error creating device ",e);
         }
     }
@@ -52,6 +66,7 @@ public class DeviceRepository {
             return session.executeRead( tx -> {
                 Result result=tx.run("""
                     MATCH (d:Device)
+                    WHERE d.isDeleted=false
                     RETURN d
                 """);
 
@@ -67,7 +82,8 @@ public class DeviceRepository {
                             node.get("partNumber").asString(),
                             node.get("BuildingName").asString(),
                             node.get("deviceType").asString(),
-                            node.get("numberOfShelfPositions").asInt()
+                            node.get("numberOfShelfPositions").asInt(),
+                            node.get("isDeleted").asBoolean()
                     ));
                 }
                 return devices;
@@ -82,6 +98,7 @@ public class DeviceRepository {
             return session.executeRead(tx -> {
                 Result result=tx.run("""
                     MATCH (d:Device {id:$id})
+                    WHERE d.isDeleted=false
                     RETURN d
                 """,Map.of("id",id));
 
@@ -98,7 +115,8 @@ public class DeviceRepository {
                         node.get("partNumber").asString(),
                         node.get("BuildingName").asString(),
                         node.get("deviceType").asString(),
-                        node.get("numberOfShelfPositions").asInt()
+                        node.get("numberOfShelfPositions").asInt(),
+                        node.get("isDeleted").asBoolean()
                 );
                 return  device;
             });
@@ -124,6 +142,7 @@ public class DeviceRepository {
                         "BuildingName",device.getBuildingName(),
                         "deviceType",device.getDeviceType(),
                         "numberOfShelfPositions",device.getNumberOfShelfPositions()
+
                 ));
             });
         } catch (Exception e) {
@@ -134,10 +153,20 @@ public class DeviceRepository {
     public void deleteDevice(String id){
         try(Session session= driver.session()){
             session.executeWrite(tx -> {
-                return tx.run("""
-                        MATCH (d:Device (id:$id)}
-                        DETACH DELETE d
+                tx.run("""
+                        MATCH (d:Device {id:$id})
+                        SET d.isDeleted=true
                         """,Map.of("id",id));
+                tx.run("""
+                        MATCH (d:Device {id:$id})-[:HAS]->(sp:ShelfPosition)
+                        SET sp.isDeleted=true;
+                        """,Map.of("id",id));
+                tx.run("""
+                        MATCH (sp:ShelfPosition)-[r:HAS]->(s:Shelf)
+                        WHERE sp.deviceId=$id
+                        DELETE r
+                        """,Map.of("id",id));
+                return null;
             });
         } catch (Exception e) {
             throw new RuntimeException(e);

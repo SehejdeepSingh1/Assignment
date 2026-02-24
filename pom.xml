@@ -46,10 +46,11 @@
 			<scope>test</scope>
 		</dependency>
 		<!-- Source: https://mvnrepository.com/artifact/org.neo4j.driver/neo4j-java-driver -->
+		<!-- Source: https://mvnrepository.com/artifact/org.neo4j.driver/neo4j-java-driver -->
 		<dependency>
 			<groupId>org.neo4j.driver</groupId>
 			<artifactId>neo4j-java-driver</artifactId>
-			<version>5.28.10</version>
+			<version>5.20.0</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>

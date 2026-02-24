@@ -14,7 +14,7 @@ public class Device {
     private String partNumber;
     private String buildingName;
     private String deviceType;
-    private Integer NumberOfShelfPositions;
-
+    private Integer numberOfShelfPositions;
+    private Boolean isDeleted=false;
 
 }

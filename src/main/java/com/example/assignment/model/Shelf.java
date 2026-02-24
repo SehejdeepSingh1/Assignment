@@ -11,5 +11,5 @@ public class Shelf {
     private String id;
     private String shelfName;
     private String partNumber;
-
+    private Boolean isDeleted=false;
 }
