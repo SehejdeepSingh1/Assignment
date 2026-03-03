@@ -17,9 +17,10 @@ public class DeviceController {
 
     private final DeviceService deviceService;
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<Device> createDevice(@RequestBody Device device){
         Device createdDevice=deviceService.createDevice(device);
+        System.out.println(device);
         return ResponseEntity.ok(createdDevice);
     }
 
@@ -36,9 +37,9 @@ public class DeviceController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateDevice(@PathVariable String id,@RequestBody Device device){
+    public ResponseEntity<Device> updateDevice(@PathVariable String id,@RequestBody Device device){
         deviceService.updateDevice(id,device);
-        return ResponseEntity.ok("Device updated successfully");
+        return ResponseEntity.ok(device);
     }
 
     @DeleteMapping("/{id}")

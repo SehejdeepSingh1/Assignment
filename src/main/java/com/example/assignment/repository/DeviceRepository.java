@@ -41,7 +41,8 @@ public class DeviceRepository {
                         id:randomUUID(),
                         deviceId:$id,
                         positionNumber:position,
-                        isDeleted:false
+                        isDeleted:false,
+                        isOccupied:false
                         })
                         
                         CREATE (d)-[:HAS]->(sp)
@@ -80,7 +81,7 @@ public class DeviceRepository {
                             node.get("id").asString(),
                             node.get("deviceName").asString(),
                             node.get("partNumber").asString(),
-                            node.get("BuildingName").asString(),
+                            node.get("buildingName").asString(),
                             node.get("deviceType").asString(),
                             node.get("numberOfShelfPositions").asInt(),
                             node.get("isDeleted").asBoolean()
@@ -113,7 +114,7 @@ public class DeviceRepository {
                         node.get("id").asString(),
                         node.get("deviceName").asString(),
                         node.get("partNumber").asString(),
-                        node.get("BuildingName").asString(),
+                        node.get("buildingName").asString(),
                         node.get("deviceType").asString(),
                         node.get("numberOfShelfPositions").asInt(),
                         node.get("isDeleted").asBoolean()
@@ -128,7 +129,7 @@ public class DeviceRepository {
     public void updateDevice(Device device){
         try(Session session=driver.session()){
             session.executeWrite(tx -> {
-                return tx.run("""
+                tx.run("""
                         MATCH (d:Device {id:$id})
                         SET d.deviceName=$deviceName,
                         d.partNumber=$partNumber,
@@ -139,11 +140,12 @@ public class DeviceRepository {
                         "id",device.getId(),
                         "deviceName",device.getDeviceName(),
                         "partNumber",device.getPartNumber(),
-                        "BuildingName",device.getBuildingName(),
+                        "buildingName",device.getBuildingName(),
                         "deviceType",device.getDeviceType(),
                         "numberOfShelfPositions",device.getNumberOfShelfPositions()
 
                 ));
+                return null;
             });
         } catch (Exception e) {
             throw new RuntimeException(e);

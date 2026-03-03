@@ -1,11 +1,13 @@
 package com.example.assignment.repository;
 
 import com.example.assignment.model.ShelfPosition;
+import com.example.assignment.model.ShelfPositionResponse;
 import lombok.RequiredArgsConstructor;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Record;
+import org.neo4j.driver.types.Node;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -25,7 +27,9 @@ public class ShelfPositionRepository {
                         CREATE (sp:shelfPosition {
                         id:$id,
                         deviceId:$deviceId,
-                        positionNumber:$positionNumber
+                        positionNumber:$positionNumber,
+                        isDeleted:false,
+                        isOccupied:false
                         })
                         CREATE (d)-[:HAS]->(sp)
                         """, Map.of(
@@ -40,35 +44,44 @@ public class ShelfPositionRepository {
         }
     }
 
-    public List<ShelfPosition> getAllShelfPositions(String deviceId){
-        try(Session session=driver.session()){
+    public List<ShelfPosition> getAllShelfPositions(String deviceId) {
+        try (Session session = driver.session()) {
             return session.executeRead(tx -> {
-                Result result=tx.run("""
-                        MATCH (d:Device {id:$deviceId})-[:HAS]->(sp:shelfPosition)
-                        WHERE sp.isDeleted=false
-                        RETURN sp
-                        """,Map.of(
-                                "deviceId",deviceId
-                ));
-
-                List<ShelfPosition> positions=new ArrayList<>();
-
-                while(result.hasNext()){
-                    Record record=result.next();
-                    org.neo4j.driver.types.Node node=record.get("sp").asNode();
+                Result result = tx.run("""
+                    MATCH (d:Device {id: $deviceId})-[:HAS]->(sp:ShelfPosition)
+                    WHERE sp.isDeleted = false
+                    OPTIONAL MATCH (sp)-[:ASSIGNED_TO]->(s:Shelf)
+                    RETURN sp,
+                           CASE WHEN s IS NOT NULL THEN true ELSE false END AS isOccupied
+                    """,
+                        Map.of("deviceId", deviceId)
+                );
+                List<ShelfPosition> positions = new ArrayList<>();
+                while (result.hasNext()) {
+                    Record record = result.next();
+                    Node node = record.get("sp").asNode();
+                    boolean isOccupied = record.get("isOccupied").asBoolean();
                     positions.add(new ShelfPosition(
                             node.get("id").asString(),
                             node.get("deviceId").asString(),
                             node.get("positionNumber").asInt(),
-                            node.get("isDeleted").asBoolean()
+                            node.get("isDeleted").asBoolean(),
+                            node.get("isOccupied").asBoolean()
                     ));
                 }
+
                 return positions;
+
             });
+
         } catch (Exception e) {
+
             throw new RuntimeException(e);
+
         }
+
     }
+
 
     public ShelfPosition getShelfPositionById(String deviceId){
         try(Session session= driver.session()){
@@ -77,7 +90,7 @@ public class ShelfPositionRepository {
                         MATCH (sp:ShelfPosition {deviceId:$deviceId})
                         RETURN sp
                         """,Map.of(
-                                "devieId",deviceId
+                                "deviceId",deviceId
                 ));
                 if(!result.hasNext()){
                     return null;
@@ -89,7 +102,8 @@ public class ShelfPositionRepository {
                         node.get("id").asString(),
                         node.get("deviceId").asString(),
                         node.get("positionNumber").asInt(),
-                        node.get("isDeleted").asBoolean()
+                        node.get("isDeleted").asBoolean(),
+                        node.get("isOccupied").asBoolean()
                 );
             });
         } catch (Exception e) {

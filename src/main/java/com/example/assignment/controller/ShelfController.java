@@ -11,17 +11,18 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/shelves")
 @RequiredArgsConstructor
+@CrossOrigin
 public class ShelfController {
 
     private final ShelfService shelfService;
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<Shelf> createShelf(@RequestBody Shelf shelf){
         Shelf created=shelfService.createShelf(shelf);
         return ResponseEntity.ok(created);
     }
 
-    @GetMapping("/getAll")
+    @GetMapping("/getAllShelves")
     public ResponseEntity<List<Shelf>> getAllShelves(){
         List<Shelf> shelfList=shelfService.getAllShelves();
         return ResponseEntity.ok(shelfList);

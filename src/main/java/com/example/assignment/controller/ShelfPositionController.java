@@ -13,6 +13,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/shelf/shelfpositions")
+@CrossOrigin
 public class ShelfPositionController {
     private final ShelfPositionService shelfPositionService;
     private final ResourceUrlProvider resourceUrlProvider;
@@ -24,9 +25,9 @@ public class ShelfPositionController {
         return  ResponseEntity.ok(shelfPositionService.createShelfPosition(shelfPosition));
     }
 
-    @GetMapping("device/{deviceid}")
-    public ResponseEntity<List<ShelfPosition>> getAllShelfPositions(@PathVariable String deviceId){
-        return ResponseEntity.ok(shelfPositionService.getAllShelfPositions(deviceId));
+    @GetMapping("/device/{deviceid}")
+    public ResponseEntity<List<ShelfPosition>> getAllShelfPositions(@PathVariable String deviceid){
+        return ResponseEntity.ok(shelfPositionService.getAllShelfPositions(deviceid));
     }
 
     @GetMapping("/{id}")
