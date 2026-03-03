@@ -27,6 +27,7 @@ public class ShelfPositionRepository {
                         CREATE (sp:shelfPosition {
                         id:$id,
                         deviceId:$deviceId,
+                        
                         isDeleted:false,
                         isOccupied:false
                         })

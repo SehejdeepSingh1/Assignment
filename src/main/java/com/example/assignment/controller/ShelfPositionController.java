@@ -42,6 +42,7 @@ public class ShelfPositionController {
         return ResponseEntity.ok("Shelf Position deleted successfully");
     }
 
+
     @PutMapping("/{id}/{numberOfShelfPositions}")
     public ResponseEntity<String> addShelfPositions(@PathVariable String id,@PathVariable int numberOfShelfPositions){
         shelfPositionService.addShelfPositions(id,numberOfShelfPositions);

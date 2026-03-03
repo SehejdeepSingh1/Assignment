@@ -36,6 +36,7 @@ public class ShelfPositionService {
     }
 
 
+
     public void deleteShelfPosition(String id){
         shelfPositionRepository.getShelfPositionById(id);
         shelfPositionRepository.deleteShelfPosition(id);
