@@ -100,7 +100,7 @@ public class ShelfRepository {
                 tx.run("""
                         MATCH (s:Shelf {id:$id})
                         SET s.shelfName=$shelfName,
-                        s.partNumber=updated.partNumber
+                        s.partNumber=$partNumber
                         """,Map.of(
                                 "id",updated.getId(),
                         "shelfName",updated.getShelfName(),
@@ -158,6 +158,7 @@ public class ShelfRepository {
                 tx.run("""
                         MATCH (s:Shelf {id:$id}),
                         (sp:ShelfPosition {id:$spid})
+                        SET sp.isOccupied=true
                         CREATE (sp)-[:HAS]->(s)
                         """,Map.of(
                         "id",shelfid,

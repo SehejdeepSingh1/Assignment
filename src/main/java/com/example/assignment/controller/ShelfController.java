@@ -35,15 +35,15 @@ public class ShelfController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateShelf(@PathVariable String id, @RequestParam Shelf shelf){
+    public ResponseEntity<Shelf> updateShelf(@PathVariable String id, @RequestBody Shelf shelf){
         shelfService.updateShelf(id,shelf);
-        return ResponseEntity.ok("Shelf Update Successfully");
+        return ResponseEntity.ok(shelf);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteShelf(@PathVariable String id){
+    public ResponseEntity<Boolean> deleteShelf(@PathVariable String id){
         shelfService.deleteShelf(id);
-        return ResponseEntity.ok("Shelf Deleted Successfully");
+        return ResponseEntity.ok(true);
     }
 
     @PostMapping("/{shelfid}/assign/{shelfpositionid}")

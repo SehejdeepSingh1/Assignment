@@ -35,12 +35,10 @@ public class DeviceRepository {
                         })
                         
                         WITH d
-                        UNWIND range(1,$numberOfShelfPositions) as position
                         
                         CREATE (sp:ShelfPosition {
                         id:randomUUID(),
                         deviceId:$id,
-                        positionNumber:position,
                         isDeleted:false,
                         isOccupied:false
                         })
@@ -133,7 +131,7 @@ public class DeviceRepository {
                         MATCH (d:Device {id:$id})
                         SET d.deviceName=$deviceName,
                         d.partNumber=$partNumber,
-                        d.BuildingName=$BuildingName,
+                        d.buildingName=$buildingName,
                         d.deviceType=$deviceType,
                         d.numberOfShelfPositions=$numberOfShelfPositions
                 """,Map.of(

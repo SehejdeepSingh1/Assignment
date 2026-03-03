@@ -35,14 +35,15 @@ public class ShelfPositionService {
         return shelfPositionRepository.getShelfPositionById(id);
     }
 
-    public void updateShelfPosition(String id,ShelfPosition updated){
-        ShelfPosition existing=shelfPositionRepository.getShelfPositionById(id);
-        existing.setPositionNumber(updated.getPositionNumber());
-        shelfPositionRepository.updateShelfPosition(updated);
-    }
 
     public void deleteShelfPosition(String id){
         shelfPositionRepository.getShelfPositionById(id);
         shelfPositionRepository.deleteShelfPosition(id);
+    }
+
+    public void addShelfPositions(String id,int numberOfShelfPositions){
+        for(int i=1;i<=numberOfShelfPositions;i++) {
+            shelfPositionRepository.addShelfPositions(id);
+        }
     }
 }

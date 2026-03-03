@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 public class ShelfPosition {
     private String id;
     private String deviceId;
-    private Integer positionNumber;
     private Boolean isDeleted=false;
     private Boolean isOccupied=false;
 }

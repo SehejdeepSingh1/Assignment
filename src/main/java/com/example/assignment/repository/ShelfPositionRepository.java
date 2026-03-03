@@ -1,7 +1,6 @@
 package com.example.assignment.repository;
 
 import com.example.assignment.model.ShelfPosition;
-import com.example.assignment.model.ShelfPositionResponse;
 import lombok.RequiredArgsConstructor;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Session;
@@ -13,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Repository
 @RequiredArgsConstructor
@@ -27,15 +27,13 @@ public class ShelfPositionRepository {
                         CREATE (sp:shelfPosition {
                         id:$id,
                         deviceId:$deviceId,
-                        positionNumber:$positionNumber,
                         isDeleted:false,
                         isOccupied:false
                         })
                         CREATE (d)-[:HAS]->(sp)
                         """, Map.of(
                                 "id",shelfPosition.getId(),
-                                "deviceId",shelfPosition.getDeviceId(),
-                                "positionNumber",shelfPosition.getPositionNumber()
+                                "deviceId",shelfPosition.getDeviceId()
                 ));
                 return null;
             });
@@ -64,7 +62,6 @@ public class ShelfPositionRepository {
                     positions.add(new ShelfPosition(
                             node.get("id").asString(),
                             node.get("deviceId").asString(),
-                            node.get("positionNumber").asInt(),
                             node.get("isDeleted").asBoolean(),
                             node.get("isOccupied").asBoolean()
                     ));
@@ -101,7 +98,6 @@ public class ShelfPositionRepository {
                 return new ShelfPosition(
                         node.get("id").asString(),
                         node.get("deviceId").asString(),
-                        node.get("positionNumber").asInt(),
                         node.get("isDeleted").asBoolean(),
                         node.get("isOccupied").asBoolean()
                 );
@@ -111,15 +107,16 @@ public class ShelfPositionRepository {
         }
     }
 
-    public void updateShelfPosition(ShelfPosition shelfPosition){
+
+    public void deleteShelfPosition(String id){
         try(Session session= driver.session()){
             session.executeWrite(tx -> {
                 tx.run("""
-                        MATCH (sp:ShelfPosition8 {id:$id})
-                        SET sp.positionNumber=$positionNumber
+                        MATCH (sp:ShelfPosition {id:$id})<-[:HAS]-(d:Device)
+                        SET sp.isDeleted=true
+                        SET d.numberOfShelfPositions=d.numberOfShelfPositions-1
                         """,Map.of(
-                                "id",shelfPosition.getId(),
-                        "positionNumber",shelfPosition.getPositionNumber()
+                                "id",id
                 ));
                 return null;
             });
@@ -128,14 +125,22 @@ public class ShelfPositionRepository {
         }
     }
 
-    public void deleteShelfPosition(String deviceId){
+    public void addShelfPositions(String deviceId){
         try(Session session= driver.session()){
             session.executeWrite(tx -> {
                 tx.run("""
-                        MATCH (sp:ShelfPosition {deviceId:$deviceId})
-                        SET sp.isDeleted=true
-                        """,Map.of(
-                                "deviceId",deviceId
+                        MATCH (d:Device {id:$deviceId})
+                        SET d.numberOfShelfPositions=d.numberOfShelfPositions+1
+                        CREATE (sp:ShelfPosition{
+                            deviceId:$deviceId,
+                                    isDeleted:false,
+                                    isOccupied:false,
+                                    id:$id
+                        })
+                        CREATE (d)-[:HAS]->(sp)
+                        RETURN d""", Map.of(
+                        "deviceId",deviceId,
+                        "id", UUID.randomUUID().toString()
                 ));
                 return null;
             });
