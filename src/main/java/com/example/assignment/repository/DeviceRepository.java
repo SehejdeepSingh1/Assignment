@@ -2,6 +2,7 @@ package com.example.assignment.repository;
 
 import com.example.assignment.model.Device;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
@@ -17,12 +18,15 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
+@Slf4j
 public class DeviceRepository {
     private final Driver driver;
 
     public void createDevice(Device device){
+        log.info("Creating device in Neo4j with id: {}", device.getId());
         try(Session session= driver.session()){
             session.executeWrite(tx -> {
+                log.debug("Executing CREATE query for device: {}", device.getId());
                 tx.run("""
                         CREATE (d:Device {
                         id:$id,
@@ -52,15 +56,18 @@ public class DeviceRepository {
                         "deviceType",device.getDeviceType(),
                         "numberOfShelfPositions",device.getNumberOfShelfPositions()
                 ));
+                log.info("Device created successfully in database: {}", device.getId());
                 return null;
             });
         }catch (Exception e){
-            e.printStackTrace();
+            log.error("Error while creating device in database: {}", device.getId(), e);
             throw new RuntimeException("Error creating device ",e);
         }
     }
 
     public List<Device> getAllDevices(){
+        log.info("Fetching all devices from database");
+
         try(Session session=driver.session()){
             return session.executeRead( tx -> {
                 Result result=tx.run("""
@@ -85,14 +92,17 @@ public class DeviceRepository {
                             node.get("isDeleted").asBoolean()
                     ));
                 }
+                log.info("Total devices fetched from DB: {}", devices.size());
                 return devices;
             });
         } catch (Exception e) {
+            log.error("Error while fetching all devices from DB", e);
             throw new RuntimeException(e);
         }
     }
 
     public Device getDeviceById(String id){
+        log.info("Fetching device from DB with id: {}", id);
         try(Session session= driver.session()){
             return session.executeRead(tx -> {
                 Result result=tx.run("""
@@ -102,6 +112,7 @@ public class DeviceRepository {
                 """,Map.of("id",id));
 
                 if(!result.hasNext()){
+                    log.warn("Device not found in DB with id: {}", id);
                     return null;
                 }
 
@@ -117,16 +128,20 @@ public class DeviceRepository {
                         node.get("numberOfShelfPositions").asInt(),
                         node.get("isDeleted").asBoolean()
                 );
+                log.info("Device fetched successfully from DB with id: {}", id);
                 return  device;
             });
         } catch (Exception e) {
+            log.error("Error while fetching device with id: {}", id, e);
             throw new RuntimeException(e);
         }
     }
 
     public void updateDevice(Device device){
+        log.info("Updating device in DB with id: {}", device.getId());
         try(Session session=driver.session()){
             session.executeWrite(tx -> {
+                log.debug("Executing UPDATE query for device: {}", device.getId());
                 tx.run("""
                         MATCH (d:Device {id:$id})
                         SET d.deviceName=$deviceName,
@@ -143,16 +158,20 @@ public class DeviceRepository {
                         "numberOfShelfPositions",device.getNumberOfShelfPositions()
 
                 ));
+                log.info("Device updated successfully in DB with id: {}", device.getId());
                 return null;
             });
         } catch (Exception e) {
+            log.error("Error while updating device with id: {}", device.getId(), e);
             throw new RuntimeException(e);
         };
     }
 
     public void deleteDevice(String id){
+        log.info("Soft deleting device with id: {}", id);
         try(Session session= driver.session()){
             session.executeWrite(tx -> {
+                log.debug("Marking device as deleted for id: {}", id);
                 tx.run("""
                         MATCH (d:Device {id:$id})
                         SET d.isDeleted=true
@@ -166,9 +185,11 @@ public class DeviceRepository {
                         WHERE sp.deviceId=$id
                         DELETE r
                         """,Map.of("id",id));
+                log.info("Device deleted successfully with id: {}", id);
                 return null;
             });
         } catch (Exception e) {
+            log.error("Error while deleting device with id: {}", id, e);
             throw new RuntimeException(e);
         }
     }

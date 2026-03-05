@@ -1,25 +1,36 @@
 package com.example.assignment.repository;
-
 import com.example.assignment.model.ShelfPosition;
+
 import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.neo4j.driver.Driver;
+
 import org.neo4j.driver.Session;
+
 import org.neo4j.driver.Result;
+
 import org.neo4j.driver.Record;
+
 import org.neo4j.driver.types.Node;
+
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
+import java.util.List;
+
+import java.util.Map;
+
+import java.util.UUID;
 @Repository
 @RequiredArgsConstructor
+@Slf4j
 public class ShelfPositionRepository {
     private final Driver driver;
-
     public void createShelfPosition(ShelfPosition shelfPosition){
+        log.info("Creating ShelfPosition with id: {} for deviceId: {}",shelfPosition.getId(),shelfPosition.getDeviceId());
         try(Session session= driver.session()){
             session.executeWrite(tx -> {
                 tx.run("""
@@ -27,23 +38,24 @@ public class ShelfPositionRepository {
                         CREATE (sp:shelfPosition {
                         id:$id,
                         deviceId:$deviceId,
-                        
                         isDeleted:false,
                         isOccupied:false
                         })
                         CREATE (d)-[:HAS]->(sp)
                         """, Map.of(
-                                "id",shelfPosition.getId(),
-                                "deviceId",shelfPosition.getDeviceId()
+                        "id",shelfPosition.getId(),
+                        "deviceId",shelfPosition.getDeviceId()
                 ));
+                log.debug("ShelfPosition node created in Neo4j with id: {}",shelfPosition.getId());
                 return null;
             });
         } catch (Exception e) {
+            log.error("Error creating ShelfPosition for deviceId: {}",shelfPosition.getDeviceId(),e);
             throw new RuntimeException(e);
         }
     }
-
     public List<ShelfPosition> getAllShelfPositions(String deviceId) {
+        log.info("Fetching all ShelfPositions for deviceId: {}",deviceId);
         try (Session session = driver.session()) {
             return session.executeRead(tx -> {
                 Result result = tx.run("""
@@ -67,35 +79,31 @@ public class ShelfPositionRepository {
                             node.get("isOccupied").asBoolean()
                     ));
                 }
-
+                log.debug("Total ShelfPositions fetched for deviceId {}: {}",deviceId,positions.size());
                 return positions;
-
             });
-
         } catch (Exception e) {
-
+            log.error("Error fetching ShelfPositions for deviceId: {}",deviceId,e);
             throw new RuntimeException(e);
-
         }
-
     }
-
-
     public ShelfPosition getShelfPositionById(String deviceId){
+        log.info("Fetching ShelfPosition by deviceId: {}",deviceId);
         try(Session session= driver.session()){
             return session.executeRead(tx -> {
                 Result result=tx.run("""
                         MATCH (sp:ShelfPosition {deviceId:$deviceId})
                         RETURN sp
                         """,Map.of(
-                                "deviceId",deviceId
+                        "deviceId",deviceId
                 ));
                 if(!result.hasNext()){
+                    log.warn("ShelfPosition not found for deviceId: {}",deviceId);
                     return null;
                 }
-
                 Record record=result.next();
                 org.neo4j.driver.types.Node node=record.get("sp").asNode();
+                log.debug("ShelfPosition found for deviceId: {}",deviceId);
                 return new ShelfPosition(
                         node.get("id").asString(),
                         node.get("deviceId").asString(),
@@ -104,12 +112,12 @@ public class ShelfPositionRepository {
                 );
             });
         } catch (Exception e) {
+            log.error("Error fetching ShelfPosition for deviceId: {}",deviceId,e);
             throw new RuntimeException(e);
         }
     }
-
-
     public void deleteShelfPosition(String id){
+        log.info("Deleting ShelfPosition with id: {}",id);
         try(Session session= driver.session()){
             session.executeWrite(tx -> {
                 tx.run("""
@@ -117,16 +125,19 @@ public class ShelfPositionRepository {
                         SET sp.isDeleted=true
                         SET d.numberOfShelfPositions=d.numberOfShelfPositions-1
                         """,Map.of(
-                                "id",id
+                        "id",id
                 ));
+                log.debug("ShelfPosition marked deleted with id: {}",id);
                 return null;
             });
         } catch (Exception e) {
+            log.error("Error deleting ShelfPosition with id: {}",id,e);
             throw new RuntimeException(e);
         }
     }
-
     public void addShelfPositions(String deviceId){
+        String id=UUID.randomUUID().toString();
+        log.info("Adding new ShelfPosition {} for deviceId: {}",id,deviceId);
         try(Session session= driver.session()){
             session.executeWrite(tx -> {
                 tx.run("""
@@ -134,18 +145,20 @@ public class ShelfPositionRepository {
                         SET d.numberOfShelfPositions=d.numberOfShelfPositions+1
                         CREATE (sp:ShelfPosition{
                             deviceId:$deviceId,
-                                    isDeleted:false,
-                                    isOccupied:false,
-                                    id:$id
+                            isDeleted:false,
+                            isOccupied:false,
+                            id:$id
                         })
                         CREATE (d)-[:HAS]->(sp)
                         RETURN d""", Map.of(
                         "deviceId",deviceId,
-                        "id", UUID.randomUUID().toString()
+                        "id",id
                 ));
+                log.debug("ShelfPosition created and linked to deviceId: {}",deviceId);
                 return null;
             });
         } catch (Exception e) {
+            log.error("Error adding ShelfPosition for deviceId: {}",deviceId,e);
             throw new RuntimeException(e);
         }
     }
