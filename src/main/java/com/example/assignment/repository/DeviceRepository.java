@@ -39,7 +39,7 @@ public class DeviceRepository {
                         })
                         
                         WITH d
-                        
+                        UNWIND range(1,$numberOfShelfPositions) AS i
                         CREATE (sp:ShelfPosition {
                         id:randomUUID(),
                         deviceId:$id,
