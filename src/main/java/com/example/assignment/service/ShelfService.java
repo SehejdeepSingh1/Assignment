@@ -1,6 +1,7 @@
 package com.example.assignment.service;
 
 import com.example.assignment.Exception.DeviceNotFoundException;
+import com.example.assignment.Exception.ShelfNotFoundException;
 import com.example.assignment.model.Device;
 import com.example.assignment.model.Shelf;
 import com.example.assignment.repository.DeviceRepository;
@@ -37,7 +38,7 @@ public class ShelfService {
     public Shelf getShelfById(String id){
         Shelf shelf=shelfRepository.getShelfById(id);
         if(shelf==null){
-            throw new DeviceNotFoundException(
+            throw new ShelfNotFoundException(
                     "Shelf not found with id : "+id
             );
         }
