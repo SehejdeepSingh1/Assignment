@@ -29,7 +29,7 @@ public class ShelfController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Shelf> getShelfById(String id){
+    public ResponseEntity<Shelf> getShelfById(@PathVariable String id){
         Shelf shelf=shelfService.getShelfById(id);
         return ResponseEntity.ok(shelf);
     }
