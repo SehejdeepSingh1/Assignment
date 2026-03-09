@@ -162,4 +162,26 @@ public class ShelfPositionRepository {
             throw new RuntimeException(e);
         }
     }
+
+    public String returnShelfName(String shelfPositionId){
+        log.info("Finding shelf with ShelfPositionid: {}",shelfPositionId);
+        try(Session session= driver.session()){
+            return session.executeRead(tx -> {
+                Result result=tx.run("""
+                        MATCH (sp:ShelfPosition {id:$shelfPositionId})-[:HAS]->(s:Shelf)
+                        RETURN s.shelfName AS shelfName
+                        """,Map.of(
+                        "shelfPositionId",shelfPositionId
+                ));
+                if(result.hasNext()){
+                    return result.single().get("shelfName").toString();
+                }else{
+                    return "Not assigned";
+                }
+            });
+        } catch (Exception e) {
+            log.error("Error finding ShelfPosition with id: {}",shelfPositionId,e);
+            throw new RuntimeException(e);
+        }
+    }
 }

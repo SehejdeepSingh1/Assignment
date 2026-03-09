@@ -51,4 +51,9 @@ public class ShelfPositionService {
         }
         log.info("All ShelfPositions added for deviceId: {}",id);
     }
+
+    public String returnShelfName(String shelfPositionId){
+
+        return shelfPositionRepository.returnShelfName(shelfPositionId);
+    }
 }

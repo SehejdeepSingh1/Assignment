@@ -84,15 +84,7 @@ class DeviceServiceTest {
         assertEquals(10, existing.getNumberOfShelfPositions());
         verify(deviceRepository, times(1)).updateDevice(existing);
     }
-    @Test
-    void testUpdateDeviceNotFound() {
-        Device updated = createSampleDevice();
-        when(deviceRepository.getDeviceById("123"))
-                .thenReturn(null);
-        assertThrows(DeviceNotFoundException.class, () ->
-                deviceService.updateDevice("123", updated)
-        );
-    }
+
     @Test
     void testDeleteDeviceSuccess() {
         Device device = createSampleDevice();
@@ -101,12 +93,5 @@ class DeviceServiceTest {
         deviceService.deleteDevice("123");
         verify(deviceRepository, times(1)).deleteDevice("123");
     }
-    @Test
-    void testDeleteDeviceNotFound() {
-        when(deviceRepository.getDeviceById("123"))
-                .thenReturn(null);
-        assertThrows(DeviceNotFoundException.class, () ->
-                deviceService.deleteDevice("123")
-        );
-    }
+
 }

@@ -54,4 +54,9 @@ public class ShelfPositionController {
         log.info("ShelfPositions added successfully to deviceId: {}", id);
         return ResponseEntity.ok(id);
     }
+
+    @GetMapping("/shelfname/{shelfPositionId}")
+    public ResponseEntity<String> returnShelfName(@PathVariable String shelfPositionId){
+        return ResponseEntity.ok(shelfPositionService.returnShelfName(shelfPositionId));
+    }
 }
