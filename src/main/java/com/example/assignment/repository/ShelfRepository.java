@@ -28,7 +28,8 @@ public class ShelfRepository {
                         id:$id,
                         shelfName:$shelfName,
                         partNumber:$partNumber,
-                        isDeleted:false})
+                        isDeleted:false,
+                        isOccupied:false})
                         """, Map.of(
                         "id", shelf.getId(),
                         "shelfName", shelf.getShelfName(),
@@ -59,7 +60,8 @@ public class ShelfRepository {
                             node.get("id").asString(),
                             node.get("shelfName").asString(),
                             node.get("partNumber").asString(),
-                            node.get("isDeleted").asBoolean()
+                            node.get("isDeleted").asBoolean(false),
+                            node.get("isOccupied").asBoolean(false)
                     ));
                 }
                 log.debug("Total shelves fetched: {}", shelves.size());
@@ -89,7 +91,8 @@ public class ShelfRepository {
                         node.get("id").asString(),
                         node.get("shelfName").asString(),
                         node.get("partNumber").asString(),
-                        node.get("isDeleted").asBoolean()
+                        node.get("isDeleted").asBoolean(false),
+                        node.get("isOccupied").asBoolean(false)
                 );
             });
         } catch (Exception e) {
@@ -177,4 +180,5 @@ public class ShelfRepository {
             throw new RuntimeException(e);
         }
     }
+
 }

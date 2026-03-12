@@ -59,6 +59,7 @@ public class ShelfController {
         return ResponseEntity.ok(true);
     }
 
+
     @PostMapping("/{shelfid}/assign/{shelfpositionid}")
     public ResponseEntity<String> assignShelf(@PathVariable String shelfid,@PathVariable String shelfpositionid){
         log.info("Received request to assign shelf position {} to shelf {}", shelfpositionid, shelfid);

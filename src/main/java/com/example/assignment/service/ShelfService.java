@@ -90,6 +90,7 @@ public class ShelfService {
         }
     }
 
+
     public void assignShelf(String shelfid, String shelfpositionid) {
         log.info("Assigning shelf position {} to shelf {}", shelfpositionid, shelfid);
         getShelfById(shelfid);

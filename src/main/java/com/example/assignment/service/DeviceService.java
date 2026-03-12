@@ -47,9 +47,7 @@ public class DeviceService {
         Device device=deviceRepository.getDeviceById(id);
         if(device==null){
             log.warn("Device not found with id: {}", id);
-            throw new DeviceNotFoundException(
-                    "Device not found with id : "+id
-            );
+            throw new DeviceNotFoundException("Device not found with id : "+id);
         }
         log.info("Device fetched successfully: {}", device);
         return device;

@@ -61,9 +61,14 @@ public class ShelfPositionRepository {
                 Result result = tx.run("""
                     MATCH (d:Device {id: $deviceId})-[:HAS]->(sp:ShelfPosition)
                     WHERE sp.isDeleted = false
-                    OPTIONAL MATCH (sp)-[:ASSIGNED_TO]->(s:Shelf)
+                    OPTIONAL MATCH (sp)-[:ASSIGNED_TO]->(s: Shelf)
                     RETURN sp,
-                           CASE WHEN s IS NOT NULL THEN true ELSE false END AS isOccupied
+                           CASE 
+                           WHEN s IS NOT NULL 
+                           THEN true 
+                           ELSE false 
+                           END 
+                    AS isOccupied
                     """,
                         Map.of("deviceId", deviceId)
                 );
@@ -87,23 +92,23 @@ public class ShelfPositionRepository {
             throw new RuntimeException(e);
         }
     }
-    public ShelfPosition getShelfPositionById(String deviceId){
-        log.info("Fetching ShelfPosition by deviceId: {}",deviceId);
+    public ShelfPosition getShelfPositionById(String id){
+        log.info("Fetching ShelfPosition by id: {}",id);
         try(Session session= driver.session()){
             return session.executeRead(tx -> {
                 Result result=tx.run("""
-                        MATCH (sp:ShelfPosition {deviceId:$deviceId})
+                        MATCH (sp:ShelfPosition {id:$id})
                         RETURN sp
                         """,Map.of(
-                        "deviceId",deviceId
+                        "id",id
                 ));
                 if(!result.hasNext()){
-                    log.warn("ShelfPosition not found for deviceId: {}",deviceId);
+                    log.warn("ShelfPosition not found for id: {}",id);
                     return null;
                 }
                 Record record=result.next();
                 org.neo4j.driver.types.Node node=record.get("sp").asNode();
-                log.debug("ShelfPosition found for deviceId: {}",deviceId);
+                log.debug("ShelfPosition found for id: {}",id);
                 return new ShelfPosition(
                         node.get("id").asString(),
                         node.get("deviceId").asString(),
@@ -112,7 +117,7 @@ public class ShelfPositionRepository {
                 );
             });
         } catch (Exception e) {
-            log.error("Error fetching ShelfPosition for deviceId: {}",deviceId,e);
+            log.error("Error fetching ShelfPosition for deviceId: {}",id,e);
             throw new RuntimeException(e);
         }
     }
@@ -132,6 +137,24 @@ public class ShelfPositionRepository {
             });
         } catch (Exception e) {
             log.error("Error deleting ShelfPosition with id: {}",id,e);
+            throw new RuntimeException(e);
+        }
+    }
+    public void deleteShelfPositionAssigned(String id) {
+        log.info("Deleting shelf with id: {}", id);
+        try (Session session = driver.session()) {
+            session.executeWrite(tx -> {
+                tx.run("""
+                        MATCH (sp:ShelfPosition {id:$id})-[r:HAS]->(s:Shelf)
+                        DELETE r
+                        SET sp.isOccupied=false
+                        """, Map.of("id", id));
+
+                log.debug("Shelf marked as deleted with id: {}", id);
+                return null;
+            });
+        } catch (Exception e) {
+            log.error("Error deleting shelf position with id: {}", id, e);
             throw new RuntimeException(e);
         }
     }

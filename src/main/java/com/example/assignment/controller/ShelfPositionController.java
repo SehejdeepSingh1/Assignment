@@ -46,7 +46,13 @@ public class ShelfPositionController {
         log.info("ShelfPosition deleted successfully for deviceId: {}", deviceId);
         return ResponseEntity.ok("Shelf Position deleted successfully");
     }
-
+    @DeleteMapping("/unassign/{id}")
+    public ResponseEntity<Boolean> deleteShelfAssigned(@PathVariable String id){
+        log.info("Received request to delete shelf with id: {}", id);
+        shelfPositionService.deleteShelfPositionAssigned(id);
+        log.info("Shelf deleted successfully with id: {}", id);
+        return ResponseEntity.ok(true);
+    }
     @PutMapping("/{id}/{numberOfShelfPositions}")
     public ResponseEntity<String> addShelfPositions(@PathVariable String id,@PathVariable int numberOfShelfPositions){
         log.info("Adding {} ShelfPositions to deviceId: {}", numberOfShelfPositions,id);

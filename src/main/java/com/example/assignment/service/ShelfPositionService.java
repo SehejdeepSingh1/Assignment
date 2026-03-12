@@ -43,6 +43,17 @@ public class ShelfPositionService {
         shelfPositionRepository.deleteShelfPosition(id);
         log.info("ShelfPosition deleted successfully with id: {}",id);
     }
+    public void deleteShelfPositionAssigned(String id){
+        try{
+            log.info("Deleting shelf with id: {}", id);
+            getShelfPositionById(id);
+            shelfPositionRepository.deleteShelfPositionAssigned(id);
+            log.info("Shelf deleted successfully with id: {}", id);
+        } catch (Exception e) {
+            log.error("Error while deleting shelf with id: {}", id, e);
+            throw new RuntimeException(e);
+        }
+    }
     public void addShelfPositions(String id,int numberOfShelfPositions){
         log.info("Adding {} ShelfPositions for deviceId: {}",numberOfShelfPositions,id);
         for(int i=1;i<=numberOfShelfPositions;i++){

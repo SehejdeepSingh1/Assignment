@@ -12,4 +12,5 @@ public class Shelf {
     private String shelfName;
     private String partNumber;
     private Boolean isDeleted=false;
+    private Boolean isOccupied=false;
 }
