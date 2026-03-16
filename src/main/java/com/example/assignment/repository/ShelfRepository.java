@@ -43,6 +43,35 @@ public class ShelfRepository {
             throw new RuntimeException(e);
         }
     }
+    public List<Shelf> getAvailableShelves() {
+        log.info("Fetching all shelves");
+        try (Session session = driver.session()) {
+            return session.executeRead(tx -> {
+                Result result = tx.run("""
+                        MATCH (s:Shelf)
+                        WHERE s.isDeleted=false AND s.isOccupied=false
+                        RETURN s
+                        """, Map.of());
+                List<Shelf> shelves = new ArrayList<>();
+                while (result.hasNext()) {
+                    Record record = result.next();
+                    org.neo4j.driver.types.Node node = record.get("s").asNode();
+                    shelves.add(new Shelf(
+                            node.get("id").asString(),
+                            node.get("shelfName").asString(),
+                            node.get("partNumber").asString(),
+                            node.get("isDeleted").asBoolean(false),
+                            node.get("isOccupied").asBoolean()
+                    ));
+                }
+                log.debug("Total shelves fetched: {}", shelves.size());
+                return shelves;
+            });
+        } catch (Exception e) {
+            log.error("Error fetching shelves", e);
+            throw new RuntimeException(e);
+        }
+    }
     public List<Shelf> getAllShelves() {
         log.info("Fetching all shelves");
         try (Session session = driver.session()) {
@@ -61,7 +90,7 @@ public class ShelfRepository {
                             node.get("shelfName").asString(),
                             node.get("partNumber").asString(),
                             node.get("isDeleted").asBoolean(false),
-                            node.get("isOccupied").asBoolean(false)
+                            node.get("isOccupied").asBoolean()
                     ));
                 }
                 log.debug("Total shelves fetched: {}", shelves.size());
@@ -101,6 +130,35 @@ public class ShelfRepository {
         }
     }
 
+
+    public Shelf getShelfByName(String name) {
+        log.info("Fetching shelf with id: {}", name);
+        try (Session session = driver.session()) {
+            return session.executeRead(tx -> {
+                Result result = tx.run("""
+                        MATCH (s:Shelf {shelfName:$name})
+                        RETURN s
+                        """, Map.of("name", name));
+                if (!result.hasNext()) {
+                    log.warn("Shelf not found with name: {}", name);
+                    return null;
+                }
+                Record record = result.next();
+                org.neo4j.driver.types.Node node = record.get("s").asNode();
+                log.debug("Shelf found with name: {}", name);
+                return new Shelf(
+                        node.get("id").asString(),
+                        node.get("shelfName").asString(),
+                        node.get("partNumber").asString(),
+                        node.get("isDeleted").asBoolean(false),
+                        node.get("isOccupied").asBoolean(false)
+                );
+            });
+        } catch (Exception e) {
+            log.error("Error fetching shelf with id: {}", name, e);
+            throw new RuntimeException(e);
+        }
+    }
     public void updateShelf(Shelf updated) {
         log.info("Updating shelf with id: {}", updated.getId());
         try (Session session = driver.session()) {
@@ -142,6 +200,23 @@ public class ShelfRepository {
             throw new RuntimeException(e);
         }
     }
+    public void deleterelation(String id) {
+        log.info("Deleting shelf with id: {}", id);
+        try (Session session = driver.session()) {
+            session.executeWrite(tx -> {
+                tx.run("""
+                        MATCH (sp:ShelfPosition {id:$spid})-[r:HAS]->(s:Shelf {id:$id})
+                        SET sp.isOccupied=true
+                        SET s.isOccupied=true
+                        DELETE r
+                        """, Map.of("id", id));
+                return null;
+            });
+        } catch (Exception e) {
+            log.error("Error deleting shelf with id: {}", id, e);
+            throw new RuntimeException(e);
+        }
+    }
 
     public void assignShelftoShelfPosition(String shelfid, String shelfPositionid) {
         log.info("Assigning shelf {} to shelfPosition {}", shelfid, shelfPositionid);
@@ -149,7 +224,7 @@ public class ShelfRepository {
             session.executeWrite(tx -> {
                 Result spcheck = tx.run("""
                             MATCH (sp:ShelfPosition {shelfPositionid:$shelfPositionid})-[:HAS]->(s:Shelf)
-                            RETURN s
+                            RETURN sp
                         """, Map.of("shelfPositionid", shelfPositionid));
                 if (spcheck.hasNext()) {
                     log.warn("ShelfPosition {} already occupied", shelfPositionid);
@@ -167,6 +242,7 @@ public class ShelfRepository {
                         MATCH (s:Shelf {id:$id}),
                               (sp:ShelfPosition {id:$spid})
                         SET sp.isOccupied=true
+                        SET s.isOccupied=true
                         CREATE (sp)-[:HAS]->(s)
                         """, Map.of(
                         "id", shelfid,

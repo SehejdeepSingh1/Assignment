@@ -148,6 +148,7 @@ public class ShelfPositionRepository {
                         MATCH (sp:ShelfPosition {id:$id})-[r:HAS]->(s:Shelf)
                         DELETE r
                         SET sp.isOccupied=false
+                        SET s.isOccupied=false
                         """, Map.of("id", id));
 
                 log.debug("Shelf marked as deleted with id: {}", id);

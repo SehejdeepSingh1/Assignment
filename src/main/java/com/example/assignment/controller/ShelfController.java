@@ -34,11 +34,26 @@ public class ShelfController {
 
         return ResponseEntity.ok(shelfList);
     }
+    @GetMapping("/getAvailableShelves")
+    public ResponseEntity<List<Shelf>> getAvailableShelves(){
+        log.info("Received request to fetch all shelves");
+        List<Shelf> shelfList = shelfService.getAvailableShelves();
+        log.info("Total shelves fetched: {}", shelfList.size());
+
+        return ResponseEntity.ok(shelfList);
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Shelf> getShelfById(@PathVariable String id){
         log.info("Received request to fetch shelf with id: {}", id);
         Shelf shelf = shelfService.getShelfById(id);
+        log.info("Shelf fetched successfully: {}", shelf);
+        return ResponseEntity.ok(shelf);
+    }
+    @GetMapping("/name/{name}")
+    public ResponseEntity<Shelf> getShelfByName(@PathVariable String name){
+        log.info("Received request to fetch shelf with name: {}", name);
+        Shelf shelf = shelfService.getShelfByName(name);
         log.info("Shelf fetched successfully: {}", shelf);
         return ResponseEntity.ok(shelf);
     }

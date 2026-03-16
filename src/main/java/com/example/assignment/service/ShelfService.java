@@ -44,6 +44,17 @@ public class ShelfService {
             throw new RuntimeException(e);
         }
     }
+    public List<Shelf> getAvailableShelves(){
+        try{
+            log.info("Fetching all shelves");
+            List<Shelf> shelves = shelfRepository.getAvailableShelves();
+            log.info("Total shelves fetched: {}", shelves.size());
+            return shelves;
+        } catch (Exception e) {
+            log.error("Error while fetching shelves", e);
+            throw new RuntimeException(e);
+        }
+    }
 
     public Shelf getShelfById(String id){
         log.info("Fetching shelf with id: {}", id);
@@ -52,6 +63,18 @@ public class ShelfService {
             log.warn("Shelf not found with id: {}", id);
             throw new ShelfNotFoundException(
                     "Shelf not found with id : "+id
+            );
+        }
+        log.info("Shelf fetched successfully: {}", shelf);
+        return shelf;
+    }
+    public Shelf getShelfByName(String name){
+        log.info("Fetching shelf with name: {}", name);
+        Shelf shelf=shelfRepository.getShelfByName(name);
+        if(shelf==null){
+            log.warn("Shelf not found with name: {}", name);
+            throw new ShelfNotFoundException(
+                    "Shelf not found with name : "+name
             );
         }
         log.info("Shelf fetched successfully: {}", shelf);
