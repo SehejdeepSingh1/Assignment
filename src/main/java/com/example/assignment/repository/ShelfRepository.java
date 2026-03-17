@@ -20,29 +20,85 @@ import java.util.Map;
 public class ShelfRepository {
     private final Driver driver;
     public void createShelf(Shelf shelf) {
+
         log.info("Creating shelf with id: {}", shelf.getId());
+
         try (Session session = driver.session()) {
+
             session.executeWrite(tx -> {
-                tx.run("""
-                        CREATE (s:Shelf {
-                        id:$id,
-                        shelfName:$shelfName,
-                        partNumber:$partNumber,
-                        isDeleted:false,
-                        isOccupied:false})
-                        """, Map.of(
-                        "id", shelf.getId(),
-                        "shelfName", shelf.getShelfName(),
-                        "partNumber", shelf.getPartNumber()
+
+                // 🔥 STEP 1: Check if shelf already exists
+
+                Result result = tx.run("""
+
+                MATCH (s:Shelf {shelfName: $shelfName})
+
+                WHERE s.isDeleted = false
+
+                RETURN s
+
+            """, Map.of(
+
+                        "shelfName", shelf.getShelfName()
+
                 ));
+
+                if (result.hasNext()) {
+
+                    log.warn("Shelf with name {} already exists", shelf.getShelfName());
+
+                    throw new RuntimeException("Shelf with this name already exists");
+
+                }
+
+                // 🔥 STEP 2: Create shelf
+
+                tx.run("""
+
+                CREATE (s:Shelf {
+
+                    id:$id,
+
+                    shelfName:$shelfName,
+
+                    partNumber:$partNumber,
+
+                    isDeleted:false,
+
+                    isOccupied:false
+
+                })
+
+            """, Map.of(
+
+                        "id", shelf.getId(),
+
+                        "shelfName", shelf.getShelfName(),
+
+                        "partNumber", shelf.getPartNumber()
+
+                ));
+
                 log.debug("Shelf created successfully with id: {}", shelf.getId());
+
                 return null;
+
             });
+
+        } catch (RuntimeException e) {
+
+            throw e; // duplicate error
+
         } catch (Exception e) {
+
             log.error("Error creating shelf with id: {}", shelf.getId(), e);
-            throw new RuntimeException(e);
+
+            throw new RuntimeException("Error creating shelf", e);
+
         }
+
     }
+
     public List<Shelf> getAvailableShelves() {
         log.info("Fetching all shelves");
         try (Session session = driver.session()) {

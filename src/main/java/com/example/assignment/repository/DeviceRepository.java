@@ -22,48 +22,116 @@ import java.util.Optional;
 public class DeviceRepository {
     private final Driver driver;
 
-    public void createDevice(Device device){
+    public void createDevice(Device device) {
+
         log.info("Creating device in Neo4j with id: {}", device.getId());
-        try(Session session= driver.session()){
+
+        try (Session session = driver.session()) {
+
             session.executeWrite(tx -> {
-                log.debug("Executing CREATE query for device: {}", device.getId());
-                tx.run("""
-                        CREATE (d:Device {
-                        id:$id,
-                        deviceName:$deviceName,
-                        partNumber:$partNumber,
-                        buildingName:$buildingName,
-                        deviceType:$deviceType,
-                        numberOfShelfPositions:$numberOfShelfPositions,
-                        isDeleted:false
-                        })
-                        
-                        WITH d
-                        UNWIND range(1,$numberOfShelfPositions) AS i
-                        CREATE (sp:ShelfPosition {
-                        id:randomUUID(),
-                        deviceId:$id,
-                        isDeleted:false,
-                        isOccupied:false
-                        })
-                        
-                        CREATE (d)-[:HAS]->(sp)
-                    """, Map.of(
-                        "id",device.getId(),
-                        "deviceName",device.getDeviceName(),
-                        "partNumber",device.getPartNumber(),
-                        "buildingName",device.getBuildingName(),
-                        "deviceType",device.getDeviceType(),
-                        "numberOfShelfPositions",device.getNumberOfShelfPositions()
+
+                // 🔥 STEP 1: Check if device already exists
+
+                Result result = tx.run("""
+
+                MATCH (d:Device {deviceName: $deviceName})
+
+                WHERE d.isDeleted = false
+
+                RETURN d
+
+            """, Map.of(
+
+                        "deviceName", device.getDeviceName()
+
                 ));
+
+                if (result.hasNext()) {
+
+                    log.warn("Device with name {} already exists", device.getDeviceName());
+
+                    throw new RuntimeException("Device with this name already exists");
+
+                }
+
+                // 🔥 STEP 2: Create device + shelf positions
+
+                tx.run("""
+
+                CREATE (d:Device {
+
+                    id:$id,
+
+                    deviceName:$deviceName,
+
+                    partNumber:$partNumber,
+
+                    buildingName:$buildingName,
+
+                    deviceType:$deviceType,
+
+                    numberOfShelfPositions:$numberOfShelfPositions,
+
+                    isDeleted:false
+
+                })
+
+                WITH d
+
+                UNWIND range(1,$numberOfShelfPositions) AS i
+
+                CREATE (sp:ShelfPosition {
+
+                    id:randomUUID(),
+
+                    deviceId:$id,
+
+                    isDeleted:false,
+
+                    isOccupied:false
+
+                })
+
+                CREATE (d)-[:HAS]->(sp)
+
+            """, Map.of(
+
+                        "id", device.getId(),
+
+                        "deviceName", device.getDeviceName(),
+
+                        "partNumber", device.getPartNumber(),
+
+                        "buildingName", device.getBuildingName(),
+
+                        "deviceType", device.getDeviceType(),
+
+                        "numberOfShelfPositions", device.getNumberOfShelfPositions()
+
+                ));
+
                 log.info("Device created successfully in database: {}", device.getId());
+
                 return null;
+
             });
-        }catch (Exception e){
+
+        } catch (RuntimeException e) {
+
+            // 🔥 Duplicate error (custom)
+
+            throw e;
+
+        } catch (Exception e) {
+
             log.error("Error while creating device in database: {}", device.getId(), e);
-            throw new RuntimeException("Error creating device ",e);
+
+            throw new RuntimeException("Error creating device", e);
+
         }
+
     }
+
 
     public List<Device> getAllDevices(){
         log.info("Fetching all devices from database");
